@@ -3,43 +3,47 @@
 /* product data */
 CREATE temporary TABLE prod(product_pk serial not null, name text, model text, description text, unit_price text, compartments text);
 
-COPY prod(product_pk, name, model, description, unit_price, compartments) from ‘$HOME/data/osnap_legacy/product_list.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY prod(product_pk, name, model, description, unit_price, compartments) from '$HOME/sql/osnap_legacy/product_list.csv' with DELIMITER ',' CSV HEADER;
+
+CREATE temporary TABLE acquisitions(product text, purchase_order_number text, order_date timestamp, ship_date timestamp, arrive_date timestamp, asset_tag text);
+
+COPY acquisitions(product, purchase_order_number, order_date, ship_date, arrive_date, asset_tag) from '$HOME/sql/osnap_legacy/acquisitions.csv', with DISCLAIMER ',' CSV HEADER;
 
 /*Cat files from inventory or load them all into one but try to preserve facility name*/
 
 CREATE temporary TABLE hqinv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp);
 
-COPY hqinv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from ‘$HOME/data/osnap_legacy/HQ_inventory.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY hqinv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from '$HOME/sql/osnap_legacy/HQ_inventory.csv' with DELIMITER ',' CSV HEADER;
 
-ALTER TABLE hqinv ADD COLUMN Location character varying(50) DEFAULT ‘HQ’;
+ALTER TABLE hqinv ADD COLUMN Location character varying(50) DEFAULT 'HQ';
 
 CREATE temporary TABLE inv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp);
 
-COPY dcinv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from ‘$HOME/data/osnap_legacy/DC_inventory.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY dcinv(assettag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from '$HOME/sql/osnap_legacy/DC_inventory.csv' with DELIMITER ',' CSV HEADER;
 
 
-ALTER TABLE DCinv ADD COLUMN Location character varying(50) DEFAULT ‘DC’;
+ALTER TABLE DCinv ADD COLUMN Location character varying(50) DEFAULT 'DC';
 
 
 CREATE temporary TABLE ncinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp);
 
-COPY ncinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from ‘$HOME/data/osnap_legacy/NC_inventory.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY ncinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from '$HOME/sql/osnap_legacy/NC_inventory.csv' with DELIMITER ',' CSV HEADER;
 
-ALTER TABLE ncinv ADD COLUMN Location character varying(50) DEFAULT ‘NC’;
+ALTER TABLE ncinv ADD COLUMN Location character varying(50) DEFAULT 'NC';
 
 CREATE temporary TABLE MB008inv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp);
 
-COPY MB008inv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from ‘$HOME/data/osnap_legacy/MB008_inventory.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY MB008inv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from '$HOME/sql/osnap_legacy/MB008_inventory.csv' with DELIMITER ',' CSV HEADER;
 
 
-ALTER TABLE MB008inv ADD COLUMN Location character varying(50) DEFAULT ‘MB008’;
+ALTER TABLE MB008inv ADD COLUMN Location character varying(50) DEFAULT 'MB008';
 
 CREATE temporary TABLE spnvinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp);
 
-COPY spnvinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from ‘$HOME/data/osnap_legacy/SPNV_inventory.csv’ with DELIMITER ‘,’ CSV HEADER;
+COPY spnvinv(asset_tag text,product text,room text,compartments text,intakedate timestamp,expungeddate timestamp) from '$HOME/sql/osnap_legacy/SPNV_inventory.csv' with DELIMITER ',' CSV HEADER;
 
 
-ALTER TABLE spnvinv ADD COLUMN Location character varying(50) DEFAULT ‘SPNV’;
+ALTER TABLE spnvinv ADD COLUMN Location character varying(50) DEFAULT 'SPNV';
 
 /*create one large master table this will create columns to fill assets,
 asset_at,*/
@@ -68,14 +72,14 @@ FROM hqinv;
 
 /* need product from acq, */
 COPY asset_tables.products(product_pk,vendor,description,alt_description)
-FROM '$HOME/osnap_legacy/file.' DELIMITER ',' CSV HEADER;
+FROM '$HOME/sql/osnap_legacy/file.' DELIMITER ',' CSV HEADER;
 
 
 COPY asset_tables.assets(asset_pk,product_fk,asset_tag,description,alt_description);
 /* need assets from all locations from *_inventory pages?*/
 
 COPY asset_tables.vehicles(vehicle_pk,asset_fk);
-/* for facilities, don’t import csv file. Just create a table with the 5 names */
+/* for facilities, don't import csv file. Just create a table with the 5 names */
 COPY asset_tables.facilities(facility_pk,fcode,common_name,locationn);
 
 COPY asset_tables.asset_at(asset_fk,facility_fk,arrive_dt,depart_dt);
