@@ -107,4 +107,43 @@ CREATE TABLE user_tables.roles (
 	PRIMARY KEY (role_pk)
 );
 
+DROP TABLE IF EXISTS user_tables.user_is;
+CREATE TABLE user_tables.user_is (
+	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
+	role_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.roles (role_pk)
+);
 
+DROP TABLE IF EXISTS user_tables.user_supports;
+CREATE TABLE user_tables.user_supports (
+	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
+	facility_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.facilities (facility_pk)
+);
+
+CREATE SCHEMA IF NOT EXISTS security_tables;
+
+DROP TABLE IF EXISTS security_tables.levels;
+CREATE TABLE security_tables.levels (
+	level_pk integer NOT NULL DEFAULT '0',
+	abbrv text DEFAULT NULL,
+	comment text DEFAULT NULL,
+	PRIMARY KEY (level_pk)
+);
+
+DROP TABLE IF EXISTS security_tables.compartments;
+CREATE TABLE security_tables.compartments (
+	compartment_pk integer NOT NULL DEFAULT '0',
+	abbrv text DEFAULT NULL,
+	comment text DEFAULT NULL,
+	PRIMARY KEY (compartment_pk)
+);
+
+DROP TABLE IF EXISTS security_tables.security_tags;
+CREATE TABLE security_tables.security_tags (
+	tag_pk integer NOT NULL DEFAULT '0',
+	level_fk integer NOT NULL DEFAULT '0' REFERENCES security_tables.levels (level_pk),
+	compartment_fk integer NOT NULL DEFAULT '0' REFERENCES security_tables.compartments (compartment_pk),
+	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
+	product_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.products (product_pk),
+	asset_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.assets (asset_pk),
+	PRIMARY KEY (tag_pk)
+);
