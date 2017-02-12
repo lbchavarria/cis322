@@ -13,3 +13,7 @@ def login():
 @app.route('/report')
 def report():
     return render_template('report.html')
+
+@app.route('/logout')
+def logout():
+    return render_template('logout.html')
