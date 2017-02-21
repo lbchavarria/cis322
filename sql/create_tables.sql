@@ -14,6 +14,10 @@ ADD TABLE roles (
 	PRIMARY KEY (role_id)
 );
 
+INSERT INTO roles VALUES
+	(1, 'Logistics Officer'),
+	(2, 'Facilities Officer');
+
 DROP TABLE IF EXISTS assets;
 ADD TABLE assets (
 	asset_id integer NOT NULL DEFAULT '0',
