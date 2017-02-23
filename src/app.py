@@ -24,8 +24,8 @@ def create_user():
                     return redirect('error')
                 sql = "INSERT INTO users (username.password) VALUES (%s,%s)"
                 cur.execute(sql,(username,password))
-                session['error'] = 'The username %s has been added'%username
-                return redirect('error')
+                session['success'] = 'The username %s has been added'%username
+                return redirect('success')
             session['error'] = 'Invalid form fields'
             return redirect('error')
         session['error'] = 'Invalid HTTP method %s'%request.method
@@ -68,3 +68,10 @@ def error():
         del session['error']
         return render_template('error.html',msg=msg)
     return render_template('error.html',msg='An unknown error has occurred')
+
+@app.route('/success',methods('GET',))
+def success() :
+    if 'success' in session.keys():
+        msg = session['success']
+        del session['success']
+        return render_template('success.html',msg=msg)
