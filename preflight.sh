@@ -6,12 +6,12 @@ if [ "$#" -ne 1 ]; then
 fi
 
 cd sql
-pg_ctl -D data/ start
+pg_ctl -D $HOME/cis322/sql/data/ -l logfile start
 createdb $1
 psql $1 -f create_tables.sql
 cd ..
 
-cp -R src/* wsgi/
+cp -R src/* $HOME/wsgi/
 
 apachectl start
 apachectl restart

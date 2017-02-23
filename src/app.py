@@ -5,6 +5,8 @@ import psycopg2
 
 app = Flask(__name__)
 
+app.secret_key = 'SECRETKEY'
+
 @app.route('/create_user',methods=('GET','POST'))
 def create_user():
 
@@ -14,22 +16,22 @@ def create_user():
         if 'username' in request.form and 'password' in request.form:
             username = request.form['username']
             password = request.form['password']
-            with psycopg2.connect(name=dbname,host=dbhost,port=dbport) as connect:
+            with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                 cur = connect.cursor()
                 sql = "SELECT COUNT(*) FROM users WHERE username=%s"
                 cur.execute(sql,(username,))
                 res = cur.fetchone()[0]
                 if res != 0:
                     session['error'] = 'The username %s is already taken'%username
-                    return redirect('error')
+                    return redirect(url_for('error'))
                 sql = "INSERT INTO users (username.password) VALUES (%s,%s)"
                 cur.execute(sql,(username,password))
                 session['success'] = 'The username %s has been added'%username
-                return redirect('success')
+                return redirect(url_for('success'))
             session['error'] = 'Invalid form fields'
-            return redirect('error')
+            return redirect(url_for('error'))
         session['error'] = 'Invalid HTTP method %s'%request.method
-        return redirect('error')
+        return redirect(url_for('error'))
 
 
 @app.route('/login',methods=('GET','POST'))
@@ -40,20 +42,20 @@ def login():
         if 'username' in request.form and 'password' in request.form:
             username = request.form['username']
             password = request.form['password']
-            with psycopg2.connect(name=dbname,host=dbhost,port=dbport) as connect:
+            with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                 cur = connect.cursor()
                 sql = "SELECT COUNT(*) FROM users WHERE username=%s AND password=%s"
                 cur.execute(sql,(username,password))
                 res = cur.fetchone()[0]
                 if res != 1:
                     session['error'] = 'Authentication failed'
-                    return redirect('error')
+                    return redirect(url_for('error'))
                 session['username']=username
-                return redirect('dashboard')
+                return redirect(url_for('dashboard'))
             session['error'] = 'Invalid form fields'
-            return redirect('error')
+            return redirect(url_for('error'))
         session['error'] = 'Invalid HTTP method %s'%request.method
-        return redirect('error')
+        return redirect(url_for('error'))
 
 
 
@@ -69,9 +71,13 @@ def error():
         return render_template('error.html',msg=msg)
     return render_template('error.html',msg='An unknown error has occurred')
 
-@app.route('/success',methods('GET',))
+@app.route('/success',methods=('GET',))
 def success() :
     if 'success' in session.keys():
         msg = session['success']
         del session['success']
         return render_template('success.html',msg=msg)
+
+if __name__ == '__main__':
+    app.debug = True
+    app.run(host='0.0.0.0', port=8080)
