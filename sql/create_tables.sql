@@ -7,7 +7,7 @@ CREATE TABLE roles (
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
-	user_id integer NOT NULL DEFAULT '0', --numeric primary key
+	user_id serial, --numeric primary key
 	username varchar(16) DEFAULT NULL, --directions ask for a username of no more than 16 characters
 	password varchar(16) DEFAULT NULL, --directrions ask for a password of no more than 16 characters
 	role_fk integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
@@ -15,13 +15,12 @@ CREATE TABLE users (
 );
 
 INSERT INTO roles VALUES
-	(0, ''),
 	(1, 'Logistics Officer'),
 	(2, 'Facilities Officer');
 
 DROP TABLE IF EXISTS assets CASCADE;
 CREATE TABLE assets (
-	asset_id integer NOT NULL DEFAULT '0',
+	asset_id serial,
 	asset_tag varchar(16) DEFAULT NULL,
 	description text DEFAULT NULL,
 	PRIMARY KEY (asset_id)
@@ -29,7 +28,7 @@ CREATE TABLE assets (
 
 DROP TABLE IF EXISTS facilities CASCADE;
 CREATE TABLE facilities (
-	facility_id integer NOT NULL DEFAULT '0',
+	facility_id serial,
 	name varchar(32) DEFAULT NULL,
 	code varchar(6) DEFAULT NULL,
 	PRIMARY KEY (facility_id)

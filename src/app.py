@@ -20,12 +20,14 @@ def create_user():
                 cur = connect.cursor()
                 sql = "SELECT COUNT(*) FROM users WHERE username=%s"
                 cur.execute(sql,(username,))
+                connect.commit()
                 res = cur.fetchone()[0]
                 if res != 0:
                     session['error'] = 'The username %s is already taken'%username
                     return redirect('error')
                 sql = "INSERT INTO users (username,password) VALUES (%s,%s)"
                 cur.execute(sql,(username,password))
+                connect.commit()
                 session['success'] = 'The username %s has been added'%username
                 return redirect('success')
             session['error'] = 'Invalid form fields'
@@ -46,6 +48,7 @@ def login():
                 cur = connect.cursor()
                 sql = "SELECT COUNT(*) FROM users WHERE username=%s AND password=%s"
                 cur.execute(sql,(username,password))
+                connect.commit()
                 res = cur.fetchone()[0]
                 if res != 1:
                     session['error'] = 'Authentication failed'
