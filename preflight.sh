@@ -5,9 +5,6 @@ if [ "$#" -ne 1 ]; then
 	exit
 fi
 
-apachectl stop
-#pg_ctl -D $HOME/cis322/sql/data stop
-
 cd sql
 pg_ctl -D $HOME/cis322/sql/data/ -l logfile start
 dropdb $1
@@ -17,5 +14,3 @@ cd ..
 
 cp -R src/* $HOME/wsgi/
 
-apachectl start
-apachectl restart

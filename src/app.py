@@ -81,6 +81,12 @@ def success() :
         del session['success']
         return render_template('success.html',msg=msg)
 
+@app.route('add_facility'('GET','POST'))
+def add_facility():
+    if request.method=='GET':
+        return render_template('add_facility.html',fname=session['fname'],fcode=session['fcode'])
+
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
