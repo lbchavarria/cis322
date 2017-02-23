@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS roles CASCADE;
+CREATE TABLE roles (
+	role_id integer NOT NULL DEFAULT '0',
+	title varchar(20) DEFAULT NULL,
+	PRIMARY KEY (role_id)
+);
+
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
 	user_id integer NOT NULL DEFAULT '0', --numeric primary key
@@ -7,14 +14,8 @@ CREATE TABLE users (
 	PRIMARY KEY (user_id)
 );
 
-DROP TABLE IF EXISTS roles CASCADE;
-CREATE TABLE roles (
-	role_id integer NOT NULL DEFAULT '0',
-	title varchar(20) DEFAULT NULL,
-	PRIMARY KEY (role_id)
-);
-
 INSERT INTO roles VALUES
+	(0, ''),
 	(1, 'Logistics Officer'),
 	(2, 'Facilities Officer');
 

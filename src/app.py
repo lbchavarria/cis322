@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect
 from config import dbname, dbhost, dbport
 import json
 import psycopg2
@@ -23,15 +23,15 @@ def create_user():
                 res = cur.fetchone()[0]
                 if res != 0:
                     session['error'] = 'The username %s is already taken'%username
-                    return redirect(url_for('error'))
-                sql = "INSERT INTO users (username.password) VALUES (%s,%s)"
+                    return redirect('error')
+                sql = "INSERT INTO users (username,password) VALUES (%s,%s)"
                 cur.execute(sql,(username,password))
                 session['success'] = 'The username %s has been added'%username
-                return redirect(url_for('success'))
+                return redirect('success')
             session['error'] = 'Invalid form fields'
-            return redirect(url_for('error'))
+            return redirect('error')
         session['error'] = 'Invalid HTTP method %s'%request.method
-        return redirect(url_for('error'))
+        return redirect('error')
 
 
 @app.route('/login',methods=('GET','POST'))
@@ -49,21 +49,21 @@ def login():
                 res = cur.fetchone()[0]
                 if res != 1:
                     session['error'] = 'Authentication failed'
-                    return redirect(url_for('error'))
+                    return redirect('error')
                 session['username']=username
-                return redirect(url_for('dashboard'))
-            session['error'] = 'Invalid form fields'
-            return redirect(url_for('error'))
-        session['error'] = 'Invalid HTTP method %s'%request.method
-        return redirect(url_for('error'))
+                return redirect('dashboard')
+        session['error'] = 'Invalid form fields'
+        return redirect('error')
+    session['error'] = 'Invalid HTTP method %s'%request.method
+    return redirect('error')
 
 
 
-@app.route('/dashboard',methods=('GET',))
+@app.route('/dashboard',methods=('GET','POST'))
 def dashboard():
     return render_template('dashboard.html',username=session['username'])
 
-@app.route('/error',methods=('GET',))
+@app.route('/error',methods=('GET','POST'))
 def error():
     if 'error' in session.keys():
         msg = session['error']
@@ -71,7 +71,7 @@ def error():
         return render_template('error.html',msg=msg)
     return render_template('error.html',msg='An unknown error has occurred')
 
-@app.route('/success',methods=('GET',))
+@app.route('/success',methods=('GET','POST'))
 def success() :
     if 'success' in session.keys():
         msg = session['success']

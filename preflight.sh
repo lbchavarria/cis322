@@ -5,8 +5,12 @@ if [ "$#" -ne 1 ]; then
 	exit
 fi
 
+apachectl stop
+#pg_ctl -D $HOME/cis322/sql/data stop
+
 cd sql
 pg_ctl -D $HOME/cis322/sql/data/ -l logfile start
+dropdb $1
 createdb $1
 psql $1 -f create_tables.sql
 cd ..
