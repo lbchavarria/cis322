@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
 	user_id integer NOT NULL DEFAULT '0', --numeric primary key
 	username varchar(16) DEFAULT NULL, --directions ask for a username of no more than 16 characters
@@ -7,7 +7,7 @@ CREATE TABLE users (
 	PRIMARY KEY (user_id)
 );
 
-DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS roles CASCADE;
 CREATE TABLE roles (
 	role_id integer NOT NULL DEFAULT '0',
 	title varchar(20) DEFAULT NULL,
@@ -18,15 +18,15 @@ INSERT INTO roles VALUES
 	(1, 'Logistics Officer'),
 	(2, 'Facilities Officer');
 
-DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS assets CASCADE;
 CREATE TABLE assets (
 	asset_id integer NOT NULL DEFAULT '0',
 	asset_tag varchar(16) DEFAULT NULL,
-	desc text DEFAULT NULL,
+	description text DEFAULT NULL,
 	PRIMARY KEY (asset_id)
 );
 
-DROP TABLE IF EXISTS facilities;
+DROP TABLE IF EXISTS facilities CASCADE;
 CREATE TABLE facilities (
 	facility_id integer NOT NULL DEFAULT '0',
 	name varchar(32) DEFAULT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE facilities (
 	PRIMARY KEY (facility_id)
 );
 
-DROP TABLE IF EXISTS asset_at;
+DROP TABLE IF EXISTS asset_at CASCADE;
 CREATE TABLE asset_at (
 	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
 	facility_fk integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
