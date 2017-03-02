@@ -1,0 +1,21 @@
+<html>
+	<head><title>Add Facilities</title></head>
+	<body>
+		<h2>List of Facilities</h2>
+		<table>
+			<tr><th>Code</th><th>Name</th><th>Created By</th></tr>
+			{% for i in list: %}
+			<tr><th>{{i['code']}}</td><td>{{i['name']}}</td><td>{{i[username']}}</td></tr>
+			{% endfor %}
+		</table>
+		<br><br>
+		<h2>Add Facility</h2>
+		<form action="{{url_for('add_facility')}}" method="POST">
+			<p>Code<br>
+			<input type="text" name="code"><br>
+			Name<br>
+			<input type="text" name="name"><br>
+			</p>
+		</form>
+	</body>
+</html>

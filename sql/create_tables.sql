@@ -23,6 +23,7 @@ CREATE TABLE assets (
 	asset_id serial,
 	asset_tag varchar(16) DEFAULT NULL,
 	description text DEFAULT NULL,
+	user_fk integer REFERENCES users(user_id),
 	PRIMARY KEY (asset_id)
 );
 
@@ -31,6 +32,7 @@ CREATE TABLE facilities (
 	facility_id serial,
 	name varchar(32) DEFAULT NULL,
 	code varchar(6) DEFAULT NULL,
+	user_fk integer REFERENCES users(user_id),
 	PRIMARY KEY (facility_id)
 );
 
@@ -42,8 +44,3 @@ CREATE TABLE asset_at (
 	arrive timestamp DEFAULT NULL,
 	depart timestamp DEFAULT NULL
 );
-
---DROP TABLE IF EXISTS locations; (future implementations)
-
-
---DROP TABLE IF EXISTS located_at; (future implementations)
