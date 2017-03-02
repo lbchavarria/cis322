@@ -4,7 +4,7 @@
 		<h2>List of Facilities</h2>
 		<table>
 			<tr><th>Code</th><th>Name</th><th>Created By</th></tr>
-			{% for i in list: %}
+			{% for i in facility_list: %}
 			<tr><th>{{i['code']}}</td><td>{{i['name']}}</td><td>{{i[username']}}</td></tr>
 			{% endfor %}
 		</table>

@@ -101,7 +101,20 @@ def into_facility(code,name,username):
 @app.route('add_facility'('GET','POST'))
 def add_facility():
     if request.method=='GET':
-        return render_template('add_facility.html',name=session['name'],code=session['code'])
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = "SELECT code,name,username FROM facilities JOIN users ON users.user_id=facilities.user_fk ORDER BY code"
+            cur.execute(sql)
+            connect.commit()
+            res = cur.fetchall()
+            facility_list = list()
+            for i in res:
+                d = dict()
+                d['code'] = i[0]
+                d['name'] = i[1]
+                d['username'] = i[2]
+                facilities.append(d
+        return render_template('add_facility.html',facility_list=facility_list))
     if request.method=='POST':
         if not 'username' in session:
             username = 'system'
@@ -138,7 +151,54 @@ def into_asset(tag,desc,code,username):
         connect.commit()
     return None
 
-@app.route('/add_asset',methods=('GET','POST'))
+def select_codes(selected=''):
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+        cur = connect.cursor()
+        sql = "SELECT code,name FROM facilities OREDR BY name"
+        cur.execute(sql)
+        connect.commit()
+        res = cur.fetchall()
+        code_options = list()
+        for i in res:
+            if i[0]==selected:
+                code_options.append('<option value=%s" selected>%s</option>'%(i[0],i[1]))
+            else:
+                code_options.append('<option value=%s>%s</option>'%(i[0],i[1]))
+        return ''.join(code_options)
+
+
+@app.route('/add_asset',methods=('GET','POST')):
+    if request.method=='GET':
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = "SELECT asset_tag,description,username FROM assets JOIN users ON users.user_id=assets.user_fk OREDR BY asset_tag"
+            cur.execute(sql)
+            connect.commit()
+            res = cur.fetchall()
+            assets_list = list()
+            for i in res:
+                d = dict()
+                d['tag'] = i[0]
+                d['desc'] = i[1]
+                d['username'] = i[2]
+                assets.append(d)
+        code_options = select_codes()
+        return render_template('add_asset.html'.asset_list=asset_list,code_options=code_options)
+    if request.method=='POST':
+        if not 'username' in session:
+            username = 'system'
+        else:
+            username = session['username']
+        tag = request.form['tag']
+        desc = request.form['desc']
+        code = request.form['code']
+        res = into_asset(tag,desc,code,username)
+        if res is not None:
+            if res == "User can't add asset":
+                del session['username']
+            session['error']=res
+            return redirect('error')
+        return redirect('add_asset')
 
 if __name__ == '__main__':
     app.debug = True
