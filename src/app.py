@@ -200,6 +200,52 @@ def select_codes(selected=''):
             return redirect('error')
         return redirect('add_asset')
 
+def is_user(username,role):
+    if not 'username' in session:
+        return False
+    with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
+        cur = connect.cursor()
+        sql = "SELECT role_fk FROM users WHERE username=%s"
+        cur.execute(sql,(username))
+        connect.commit()
+        if role == cur.fetchone()[0]:
+            retrun True
+    return False
+
+def delete_asset(tag,date):
+    with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
+        cur = connect.cursor()
+        sql = "SELECT COUNT(*) FROM assets WHERE asset_tag=%s"
+        cur.execute(sql,(tag))
+        res = cur.fetchone()[0]
+        if res != 1:
+            return 'The asset tag %s does not exist in the database'%tag
+        sql = 'SELECT COUNT(*) FROM asset_at JOIN assets ON assets.asset_id=asset_at.asset_fk WHERE assets.asset_tag=%s AND disposed IS NOT NULL'
+        cur.execute(sql,(tag))
+        res = cur.fetchone()[0]
+        if res > 0:
+            return 'The asset tag %s has already been disposed'%tag
+        sql = "UPDATE asset_at SET disposed=%s FROM assets WHERE asset_fk=asset_id AND asset_tag=%s AND depart IS NULL AND disposed IS NULL"
+        cur.execute(sql,(date,tag))
+        connect.commit()
+        return None
+
+@app.route('/dispose_asset',methods=('GET','POST'))
+def dispose_asset():
+    if not user_is(session['username'],1):
+        session['error']='Logistic Officers are the only ones that can dispose assets'
+        return redirect('error')
+    if request.method=='GET':
+        return render_templat('dispose_asset.html')
+    if request.method=='POST':
+        tag = request.form['tag']
+        date = request.form['date']
+        res = delete_asset(tag,date)
+        if res is not None:
+            session['error']=res
+            return redirect('error')
+        return redirect('dashboard')
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)

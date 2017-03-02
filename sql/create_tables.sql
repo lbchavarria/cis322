@@ -40,7 +40,7 @@ DROP TABLE IF EXISTS asset_at CASCADE;
 CREATE TABLE asset_at (
 	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
 	facility_fk integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
-	disposed boolean DEFAULT 'FALSE',
+	disposed timestamp DEFAULT NULL,
 	arrive timestamp DEFAULT NULL,
 	depart timestamp DEFAULT NULL
 );
