@@ -246,6 +246,51 @@ def dispose_asset():
             return redirect('error')
         return redirect('dashboard')
 
+@app.route('/asset_report',methods=('GET','POST'))
+def asset_report():
+    fields=dict()
+    data=list()
+    if request.method=='GET':
+        fields['code']=''
+        fields['rdate']=datetime.utcnow().isoformat()
+    if request.method=='POST':
+        if 'code' in request.form and 'date' in request.form:
+            fields['code']=request.form['code']
+            fields['rdate']=request.form['date']
+        else:
+            fields['code']=None
+            fields['rdate']=datetime.utcnow().isoformat()
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = 'SELECT asset_tag,description,name,arrive,depart,disposed,code FROM asset_at JOIN facilities ON asset_at.facility_fk=facilities.facility_id JOIN assets ON asset_at.asset_fk=assets.asset_id WHERE (arrive IS NULL OR arrive<=%s) AND (depart IS NULL OR depart>=%s) AND (disposed IS NULL OR disposed>=%s)'
+            if fields['code']=='':
+                sql += " OREDR BY asset_tag ASC"
+                cur.execute(sql,(fields['rdate'],fields['rdate'],fields['rdate']))
+            else:
+                sql += " AND facilities.code=%s OREDR BY asset_tag ASC"
+                cur.execute(sql,(fields['rdate'],fields['rdate'],fields['rdate'],fields['code']))
+            res = cur.fetchall()
+            connect.commit()
+            for i in res:
+                d=dict()
+                d['asset_tag']=i[0]
+                d['desc']=i[1]
+                d['name']=i[2]
+                if i[3] is None:
+                    d['adate']=''
+                else:
+                    d['adate']=i[3]
+                if i[4] is None and i[5] is None:
+                    d['ddate']=''
+                elif i[4]:
+                    d['ddate']=i[4]
+                else:
+                    d['ddate']=i[5]
+                d['code']=i[6]
+                data.append(d)
+    v=select_codes(selected=fields['code'])
+    return render_template('asset_report.html',vals=fields,code_options=v,data=data)
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
