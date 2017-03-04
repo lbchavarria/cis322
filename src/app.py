@@ -93,7 +93,7 @@ def success() :
         return render_template('success.html',msg=msg)
 
 def into_facility(code,name,username):
-    with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT COUNT(*) FROM users WHERE username=%s"
         cur.execute(sql,(username,))
@@ -105,7 +105,7 @@ def into_facility(code,name,username):
         res = cur.fetchone()[0]
         if res != 0:
             return "Already exists and won't be added again"
-        sql = "INSERT INTO facilities (name,fcode,user_fk) SELECT %s,%s,user_id FROM users WHERE username=%s"
+        sql = "INSERT INTO facilities (name,code,user_fk) SELECT %s,%s,user_id FROM users WHERE username=%s"
         cur.execute(sql,(name,code,username))
         connect.commit()
     return None
@@ -125,7 +125,7 @@ def add_facility():
                 d['code'] = i[0]
                 d['name'] = i[1]
                 d['username'] = i[2]
-                facilities.append(d)
+                facility_list.append(d)
         return render_template('add_facility.html',facility_list=facility_list)
     if request.method=='POST':
         if not 'username' in session:
@@ -151,7 +151,7 @@ def into_asset(tag,desc,code,username):
         if res != 1:
             return "User can't add asset"
         sql = "SELECT COUNT(*) FROM assets WHERE asset_tag=%s"
-        cur.execute(sql,(tag))
+        cur.execute(sql,(tag,))
         res= cur.fetchone()[0]
         if res != 0:
             return "Already exists and won't be added again"
@@ -226,15 +226,15 @@ def is_user(role):
     return False
 
 def delete_asset(tag,date):
-    with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT COUNT(*) FROM assets WHERE asset_tag=%s"
-        cur.execute(sql,(tag))
+        cur.execute(sql,(tag,))
         res = cur.fetchone()[0]
         if res != 1:
             return 'The asset tag %s does not exist in the database'%tag
         sql = 'SELECT COUNT(*) FROM asset_at JOIN assets ON assets.asset_id=asset_at.asset_fk WHERE assets.asset_tag=%s AND disposed IS NOT NULL'
-        cur.execute(sql,(tag))
+        cur.execute(sql,(tag,))
         res = cur.fetchone()[0]
         if res > 0:
             return 'The asset tag %s has already been disposed'%tag
@@ -245,11 +245,11 @@ def delete_asset(tag,date):
 
 @app.route('/dispose_asset',methods=('GET','POST'))
 def dispose_asset():
-    if not is_user('1'):
+    if not is_user(1):
         session['error']='Logistic Officers are the only ones that can dispose assets'
         return redirect('error')
     if request.method=='GET':
-        return render_template('dispose_asset.html')
+        return render_template('dispose_asset.html',rdate=datetime.datetime.utcnow().isoformat())
     if request.method=='POST':
         tag = request.form['tag']
         date = request.form['date']
@@ -277,10 +277,10 @@ def asset_report():
             cur = connect.cursor()
             sql = 'SELECT asset_tag,description,name,arrive,depart,disposed,code FROM asset_at JOIN facilities ON asset_at.facility_fk=facilities.facility_id JOIN assets ON asset_at.asset_fk=assets.asset_id WHERE (arrive IS NULL OR arrive<=%s) AND (depart IS NULL OR depart>=%s) AND (disposed IS NULL OR disposed>=%s)'
             if fields['code']=='':
-                sql += " OREDR BY asset_tag ASC"
+                sql += " ORDER BY asset_tag ASC"
                 cur.execute(sql,(fields['rdate'],fields['rdate'],fields['rdate']))
             else:
-                sql += " AND facilities.code=%s OREDR BY asset_tag ASC"
+                sql += " AND facilities.code=%s ORDER BY asset_tag ASC"
                 cur.execute(sql,(fields['rdate'],fields['rdate'],fields['rdate'],fields['code']))
             res = cur.fetchall()
             connect.commit()
@@ -303,6 +303,54 @@ def asset_report():
                 data.append(d)
     v=select_codes(selected=fields['code'])
     return render_template('asset_report.html',vals=fields,code_options=v,data=data)
+
+@app.route('/transfer_req',methods=('GET','POST'))
+def transfer_req():
+    if not is_user(1):
+        session['error']='Logistic Officers are the only ones that can request a transfer'
+        return redirect('error')
+    if request.method=='GET':
+        return render_template('transfer_req.html')
+    if request.method=='POST':
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = "SELECT COUNT(*) FROM assets WHERE asset_tag=%s"
+            asset_tag = request.form['asset_tag']
+            cur.execute(sql,(asset_tag,))
+            connect.commit()
+            res = cur.fetchone()[0]
+            if res != 1:
+                session['error'] = 'The asset tag does not exist'
+                return redirect('error')
+            sql = "SELECT COUNT(*) FROM facilities WHERE name=%s"
+            source = request.form['source']
+            cur.execute(sql,(source,))
+            connect.commit()
+            res = cur.fetchone()[0]
+            if res != 1:
+                session['error'] = "The source facility does not exist"
+                return redirect('error')
+            sql = "SELECT COUNT(*) FROM assets JOIN asset_at ON assets.asset_id=asset_at.asset_fk JOIN facilities ON facilities.facility_id=asset_at.facility_fk WHERE asset_tag=%s AND name=%s"
+            cur.execute(sql,(asset_tag,source))
+            connect.commit()
+            res = cur.fetchone()[0]
+            if res != 1:
+                session['error']='The asset does not exist in the source facility'
+                return redirect('error')
+            sql = "SELECT COUNT(*) FROM facilities WHERE name=%s"
+            dest = request.form['dest']
+            cur.execute(sql,(dest,))
+            connect.commit()
+            res = cur.fetchone()[0]
+            if res != 1:
+                session['error'] = "The destination facility does not exist"
+                return redirect('error')
+            sql = "INSERT INTO request (requester_id,request_time,source,destination,asset_fk) SELECT user_id,now(),f1.facility_id,f2.facility_id,asset_id FROM users, facilities AS f1, facilities AS f2, assets WHERE username=%s AND f1.name=%s AND f2.name=%s AND asset_tag=%s"
+            username=session['username']
+            cur.execute(sql,(username,source,dest,asset_tag))
+            connect.commit()
+            session['success'] = "Request has been successully added"
+            return redirect('success')
 
 if __name__ == '__main__':
     app.debug = True

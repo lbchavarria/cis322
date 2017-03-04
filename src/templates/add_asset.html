@@ -4,7 +4,7 @@
 		<h2>List of Assets</h2>
 		<table>
 			<tr><th>Asset Tag</th><th>Description</th><th>Created By</th></tr>
-			{% for i in list: %}
+			{% for i in asset_list: %}
 			<tr><th>{{i['tag']}}</th><th>{{i['desc']}}</th><th>{{i['username']}}</td></tr>
 			{% endfor %}
 		</table>
@@ -14,10 +14,12 @@
 			<p>Facility:<br>
 			<select name="code">{{code_options|safe}}</select><br>
 			Asset Tag:<br>
-			<input type="text" name="tag">
+			<input type="text" name="tag"><br>
 			Desciption:<br>
 			<textarea name="desc">Description</textarea><br>
 			<input type="submit">
 		</form>
+		<br><br>
+		<a href="/dashboard">Back to Dashboard</a>
 	</body>
 </html>

@@ -15,6 +15,7 @@ CREATE TABLE users (
 );
 
 INSERT INTO roles VALUES
+	(0, ''),
 	(1, 'Logistics Officer'),
 	(2, 'Facilities Officer');
 
@@ -47,7 +48,7 @@ CREATE TABLE asset_at (
 
 DROP TABLE IF EXISTS request CASCADE;
 CREATE TABLE request (
-	requester_id integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
+	requester_id integer NOT NULL DEFAULT '0' REFERENCES users (user_id),
 	request_time timestamp DEFAULT NULL,
 	source integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
 	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
