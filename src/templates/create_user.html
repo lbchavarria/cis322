@@ -1,0 +1,19 @@
+<html>
+	<head><title>LOST Create User</title></head>
+	<body>
+		<h2>Create User</h2>
+		<form action="{{url_for('create_user')}}" method='POST'>
+			<p>Username:<br>
+			<input type="text" name="username"><br>
+			Password:<br>
+			<input type="password" name="password"><br>
+			Role:
+			<select>
+				<option value=0>--Please select a role--</option>
+				<option value=1>Logistics Officer</option>
+				<option value=2>Facilities Officer</option>
+			</select>
+			<input type="submit">
+		</form>
+	</body>
+</html>

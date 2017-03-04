@@ -1,149 +1,46 @@
-\connect lost
+DROP TABLE IF EXISTS roles CASCADE;
+CREATE TABLE roles (
+	role_id integer NOT NULL DEFAULT '0',
+	title varchar(20) DEFAULT NULL,
+	PRIMARY KEY (role_id)
+);
 
-CREATE SCHEMA IF NOT EXISTS asset_tables;
+DROP TABLE IF EXISTS users CASCADE;
+CREATE TABLE users (
+	user_id serial, --numeric primary key
+	username varchar(16) DEFAULT NULL, --directions ask for a username of no more than 16 characters
+	password varchar(16) DEFAULT NULL, --directrions ask for a password of no more than 16 characters
+	role_fk integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
+	PRIMARY KEY (user_id)
+);
 
-DROP TABLE IF EXISTS asset_tables.products;
-CREATE TABLE asset_tables.products (
-	product_pk integer NOT NULL DEFAULT '0',
-	vendor text DEFAULT NULL,
+INSERT INTO roles VALUES
+	(1, 'Logistics Officer'),
+	(2, 'Facilities Officer');
+
+DROP TABLE IF EXISTS assets CASCADE;
+CREATE TABLE assets (
+	asset_id serial,
+	asset_tag varchar(16) DEFAULT NULL,
 	description text DEFAULT NULL,
-	alt_description text DEFAULT NULL,
-	PRIMARY KEY (product_pk)
+	user_fk integer REFERENCES users(user_id),
+	PRIMARY KEY (asset_id)
 );
 
-DROP TABLE IF EXISTS asset_tables.assets;
-CREATE TABLE asset_tables.assets (
-	asset_pk integer NOT NULL DEFAULT '0',
-	product_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.products (product_pk),
-	asset_tag text DEFAULT NULL,
-	description text DEFAULt NULL,
-	alt_description text DEFAULT NULL,
-	PRIMARY KEY (asset_pk)
---	KEY product_fk1 (product_fk),
---	CONSTRAINT product_fk1 FOREIGN KEY (product_fk) REFERENCES asset_tables.products (product_pk)
+DROP TABLE IF EXISTS facilities CASCADE;
+CREATE TABLE facilities (
+	facility_id serial,
+	name varchar(32) DEFAULT NULL,
+	code varchar(6) DEFAULT NULL,
+	user_fk integer REFERENCES users(user_id),
+	PRIMARY KEY (facility_id)
 );
 
-DROP TABLE IF EXISTS asset_tables.vehicles;
-CREATE TABLE asset_tables.vehicles (
-	vehicle_pk integer NOT NULL DEFAULT '0',
-	asset_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.assets (asset_pk),
-	PRIMARY KEY (vehicle_pk)
---	KEY asset_fk1 (asset_fk)
---	CONSTRAINT asset_fk1 FOREIGN KEY (asset_fk) REFERENCES asset_tables.assets (asset_pk)
-);
-
-DROP TABLE IF EXISTS asset_tables.facilities;
-CREATE TABLE asset_tables.facilities (
-	facility_pk integer NOT NULL DEFAULT '0',
-	fcode text DEFAULT NULL,
-	common_name text DEFAULT NULL,
-	location text DEFAULT NULL,
-	PRIMARY KEY (facility_pk)
-);
-
-DROP TABLE IF EXISTS asset_tables.asset_at;
-CREATE TABLE asset_tables.asset_at (
-	asset_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.assets (asset_pk),
-	facility_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.facilities (facility_pk),
-	arrive_dt timestamp DEFAULT NULL,
-	depart_dt timestamp DEFAULT NULL
---	KEY asset_fk2 (asset_fk),
---	KEY facility_fk1 (facility_fk),
---	CONSTRAINT asset_fk2 FOREIGN KEY (asset_fk) REFERENCES asset_tables.assets (asset_pk),
---	CONSTRAINT facility_fk1 FOREIGN KEY (facility_fk) REFERENCES asset_tables.facilities (facility_pk)
-);
-
-DROP TABLE IF EXISTS asset_tables.convoys;
-CREATE TABLE asset_tables.convoys (
-	convoy_pk integer NOT NULL DEFAULT '0',
-	request text DEFAULT NULL,
-	source_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.facilities (facility_pk),
-	dest_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.facilities (facility_pk),
-	depart_dt timestamp DEFAULT NULL,
-	arrive_dt timestamp DEFAULT NULL,
-	PRIMARY KEY (convoy_pk)
---	KEY source_fk1 (source_fk),
---	KEY dest_fk1 (dest_fk),
---	CONSTRAINT source_fk1 FOREIGN KEY (source_fk) REFERENCES asset_tables.facilities (facility_pk),
---	CONSTRAINT dest_fk1 FOREIGN KEY (dest_fk) REFERENCES asset_tables.facilities (facility_pk)
-);
-
-DROP TABLE IF EXISTS asset_tables.used_by;
-CREATE TABLE asset_tables.used_by (
-	vehicle_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.vehicles (vehicle_pk),
-	convoy_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.convoys (convoy_pk)
---	KEY vehicle_fk1 (vehicle_fk),
---	KEY convoy_fk1 (convoy_fk)
---	CONSTRAINT vehicle_fk1 FOREIGN KEY (vehicle_fk) REFERENCES asset_tables.vehicles (vehicle_pk),
---	CONSTRAINT convoys_fk1 FOREIGN KEY (convoy_fk) REFERENCES asset_tables.convoys (convoy_pk)
-);
-
-DROP TABLE IF EXISTS asset_tables.asset_on;
-CREATE TABLE asset_tables.asset_on (
-	asset_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.assets (asset_pk),
-	convoy_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.convoys (convoy_pk),
-	load_dt timestamp DEFAULT NULL,
-	unload_dt timestamp DEFAULT NULL
---	KEY asset_fk3 (asset_fk),
---	KEY convoy_fk2 (convoy_fk),
---	CONSTRAINT asset_fk3 FOREIGN KEY (asset_fk) REFERENCES asset_tables.assets (asset_pk),
---	CONSTRAINT convoy_fk2 FOREIGN KEY (convoy_fk) REFERENCES asset_tables.convoys (convoy_pk)
-);
-
-CREATE SCHEMA IF NOT EXISTS user_tables;
-
-DROP TABLE IF EXISTS user_tables.users;
-CREATE TABLE user_tables.users (
-	user_pk integer NOT NULL DEFAULT '0',
-	username text DEFAULT NULL,
-	active boolean DEFAULT NULL,
-	PRIMARY KEY (user_pk)
-);
-
-DROP TABLE IF EXISTS user_tables.roles;
-CREATE TABLE user_tables.roles (
-	role_pk integer NOT NULL DEFAULT '0',
-	title text DEFAULT NULL,
-	PRIMARY KEY (role_pk)
-);
-
-DROP TABLE IF EXISTS user_tables.user_is;
-CREATE TABLE user_tables.user_is (
-	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
-	role_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.roles (role_pk)
-);
-
-DROP TABLE IF EXISTS user_tables.user_supports;
-CREATE TABLE user_tables.user_supports (
-	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
-	facility_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.facilities (facility_pk)
-);
-
-CREATE SCHEMA IF NOT EXISTS security_tables;
-
-DROP TABLE IF EXISTS security_tables.levels;
-CREATE TABLE security_tables.levels (
-	level_pk integer NOT NULL DEFAULT '0',
-	abbrv text DEFAULT NULL,
-	comment text DEFAULT NULL,
-	PRIMARY KEY (level_pk)
-);
-
-DROP TABLE IF EXISTS security_tables.compartments;
-CREATE TABLE security_tables.compartments (
-	compartment_pk integer NOT NULL DEFAULT '0',
-	abbrv text DEFAULT NULL,
-	comment text DEFAULT NULL,
-	PRIMARY KEY (compartment_pk)
-);
-
-DROP TABLE IF EXISTS security_tables.security_tags;
-CREATE TABLE security_tables.security_tags (
-	tag_pk integer NOT NULL DEFAULT '0',
-	level_fk integer NOT NULL DEFAULT '0' REFERENCES security_tables.levels (level_pk),
-	compartment_fk integer NOT NULL DEFAULT '0' REFERENCES security_tables.compartments (compartment_pk),
-	user_fk integer NOT NULL DEFAULT '0' REFERENCES user_tables.users (user_pk),
-	product_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.products (product_pk),
-	asset_fk integer NOT NULL DEFAULT '0' REFERENCES asset_tables.assets (asset_pk),
-	PRIMARY KEY (tag_pk)
+DROP TABLE IF EXISTS asset_at CASCADE;
+CREATE TABLE asset_at (
+	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
+	facility_fk integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	disposed timestamp DEFAULT NULL,
+	arrive timestamp DEFAULT NULL,
+	depart timestamp DEFAULT NULL
 );

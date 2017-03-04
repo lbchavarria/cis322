@@ -6,12 +6,11 @@ if [ "$#" -ne 1 ]; then
 fi
 
 cd sql
-psql $1 -f creat_tables.sql
-curl -0 https://classes.cs.uoregon.edu//17W/cis322/files/osnap_legacy.tar.gz
-tar -xzf osnap_legacy.tar.gz
-bash ./import_data.sh $1 5432
-rm -rf osnap_legacy osnap_legacy.tar.gz
+pg_ctl -D $HOME/cis322/sql/data/ -l logfile start
+dropdb $1
+createdb $1
+psql $1 -f create_tables.sql
 cd ..
 
-cp -R src/* $HOME/wsgi
-cp util/osnap_crypto.py $HOME/wsgi
+cp -R src/* $HOME/wsgi/
+

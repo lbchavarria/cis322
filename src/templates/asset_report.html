@@ -1,0 +1,21 @@
+<html>
+	<head><title>Asset Report</title></head>
+	<body>
+		<h2>Asset Report</h2>
+		<h3>Filter Criteria</h3>
+		<form action="{{url_for('asset_report')}}" method="POST">
+			<table>
+				<tr><td>Facility:</td><td><select name="code"><option value="">All Facilities</option>{{code_options|safe}}</select></td></tr>
+				<tr><td>Date:</td><td><input type="text" name="date" value="{{vals['rdate']}}"></td></tr>
+			</table>
+			<input type="submit">
+		</form>
+		<h3>Asset Report</h3>
+		<table>
+			<tr><th>Asset Tag</th><th>Description</th><th>Code</th><th>Name</th><th>Arrival</th><th>Departure</th></tr>
+			{% for i in data: }
+			<tr><th>{{i['asset_tag']}}</td><td>{{i['desc']}}</td><td>{{i['code']}}</td><td>{{i['name']}}</td><td>{{i['adate']}}</td><td>{{i['ddate']}}</td></tr>
+			{% endfor %}
+		</table>
+	</body>
+</html>
