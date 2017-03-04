@@ -13,7 +13,7 @@
 		<h3>Asset Report</h3>
 		<table>
 			<tr><th>Asset Tag</th><th>Description</th><th>Code</th><th>Name</th><th>Arrival</th><th>Departure</th></tr>
-			{% for i in data: }
+			{% for i in data: %}
 			<tr><th>{{i['asset_tag']}}</td><td>{{i['desc']}}</td><td>{{i['code']}}</td><td>{{i['name']}}</td><td>{{i['adate']}}</td><td>{{i['ddate']}}</td></tr>
 			{% endfor %}
 		</table>

@@ -18,6 +18,7 @@ def create_user():
         if 'username' in request.form and 'password' in request.form:
             username = request.form['username']
             password = request.form['password']
+            role = request.form['role']
             with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                 cur = connect.cursor()
                 sql = "SELECT COUNT(*) FROM users WHERE username=%s"
@@ -27,8 +28,8 @@ def create_user():
                 if res != 0:
                     session['error'] = 'The username %s is already taken'%username
                     return redirect('error')
-                sql = "INSERT INTO users (username,password) VALUES (%s,%s)"
-                cur.execute(sql,(username,password))
+                sql = "INSERT INTO users (username,password,role_fk) VALUES (%s,%s,%s)"
+                cur.execute(sql,(username,password,role))
                 connect.commit()
                 session['success'] = 'The username %s has been added'%username
                 return redirect('success')
@@ -63,7 +64,18 @@ def login():
 
 @app.route('/dashboard',methods=('GET','POST'))
 def dashboard():
-    return render_template('dashboard.html',username=session['username'])
+    usern = session['username']
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+        cur = connect.cursor()
+        sql = "SELECT COUNT(*) FROM users WHERE username=%s AND role_fk=1"
+        cur.execute(sql,(usern))
+        res = cur.fetchone()[0]
+        if res != 0:
+            is_log_off = True
+        else:
+            is_log_off = False
+        connect.commit()
+    return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off)
 
 @app.route('/error',methods=('GET','POST'))
 def error():
@@ -98,7 +110,7 @@ def into_facility(code,name,username):
         connect.commit()
     return None
 
-@app.route('add_facility'('GET','POST'))
+@app.route('/add_facility',methods=('GET','POST'))
 def add_facility():
     if request.method=='GET':
         with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
@@ -113,8 +125,8 @@ def add_facility():
                 d['code'] = i[0]
                 d['name'] = i[1]
                 d['username'] = i[2]
-                facilities.append(d
-        return render_template('add_facility.html',facility_list=facility_list))
+                facilities.append(d)
+        return render_template('add_facility.html',facility_list=facility_list)
     if request.method=='POST':
         if not 'username' in session:
             username = 'system'
@@ -154,7 +166,7 @@ def into_asset(tag,desc,code,username):
 def select_codes(selected=''):
     with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
-        sql = "SELECT code,name FROM facilities OREDR BY name"
+        sql = "SELECT code,name FROM facilities ORDER BY name"
         cur.execute(sql)
         connect.commit()
         res = cur.fetchall()
@@ -167,23 +179,24 @@ def select_codes(selected=''):
         return ''.join(code_options)
 
 
-@app.route('/add_asset',methods=('GET','POST')):
+@app.route('/add_asset',methods=('GET','POST'))
+def add_asset():
     if request.method=='GET':
         with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
             cur = connect.cursor()
-            sql = "SELECT asset_tag,description,username FROM assets JOIN users ON users.user_id=assets.user_fk OREDR BY asset_tag"
+            sql = "SELECT asset_tag,description,username FROM assets JOIN users ON users.user_id=assets.user_fk ORDER BY asset_tag"
             cur.execute(sql)
             connect.commit()
             res = cur.fetchall()
-            assets_list = list()
+            asset_list = list()
             for i in res:
                 d = dict()
                 d['tag'] = i[0]
                 d['desc'] = i[1]
                 d['username'] = i[2]
-                assets.append(d)
+                asset_list.append(d)
         code_options = select_codes()
-        return render_template('add_asset.html'.asset_list=asset_list,code_options=code_options)
+        return render_template('add_asset.html',asset_list=asset_list,code_options=code_options)
     if request.method=='POST':
         if not 'username' in session:
             username = 'system'
@@ -200,16 +213,16 @@ def select_codes(selected=''):
             return redirect('error')
         return redirect('add_asset')
 
-def is_user(username,role):
+def is_user(role):
     if not 'username' in session:
         return False
-    with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT role_fk FROM users WHERE username=%s"
-        cur.execute(sql,(username))
+        cur.execute(sql,(session['username']))
         connect.commit()
         if role == cur.fetchone()[0]:
-            retrun True
+            return True
     return False
 
 def delete_asset(tag,date):
@@ -232,7 +245,7 @@ def delete_asset(tag,date):
 
 @app.route('/dispose_asset',methods=('GET','POST'))
 def dispose_asset():
-    if not user_is(session['username'],1):
+    if not is_user('1'):
         session['error']='Logistic Officers are the only ones that can dispose assets'
         return redirect('error')
     if request.method=='GET':
@@ -252,14 +265,14 @@ def asset_report():
     data=list()
     if request.method=='GET':
         fields['code']=''
-        fields['rdate']=datetime.utcnow().isoformat()
+        fields['rdate']=datetime.datetime.utcnow().isoformat()
     if request.method=='POST':
         if 'code' in request.form and 'date' in request.form:
             fields['code']=request.form['code']
             fields['rdate']=request.form['date']
         else:
             fields['code']=None
-            fields['rdate']=datetime.utcnow().isoformat()
+            fields['rdate']=datetime.datetime.utcnow().isoformat()
         with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
             cur = connect.cursor()
             sql = 'SELECT asset_tag,description,name,arrive,depart,disposed,code FROM asset_at JOIN facilities ON asset_at.facility_fk=facilities.facility_id JOIN assets ON asset_at.asset_fk=assets.asset_id WHERE (arrive IS NULL OR arrive<=%s) AND (depart IS NULL OR depart>=%s) AND (disposed IS NULL OR disposed>=%s)'

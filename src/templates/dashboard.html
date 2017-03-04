@@ -2,6 +2,16 @@
 	<head><title>LOST Dashboard</title></head>
 	<body>
 		<h2>LOST Dashboard</h2>
-		<p>You have successfully logged in<br>Welcome {{username}}</p>
+		<p>You have successfully logged in<br>Welcome {{username}}
+		<br><br>
+		<a href="/asset_report">Asset Report</a><br>
+		<a href="/transfer_report">Transfer Report</a><br>
+		<a href="/add_asset">Add Asset</a><br>
+		<a href="/add_facility">Add facility</a><br>
+		<a href="dispose_asset">Dispose Asset</a><br>
+		{% if is_log_off %}
+		<a href='/transfer_req'>Transfer Request</a><br>
+		{% endif %}
+		</p>
 	</body>
 </html>
