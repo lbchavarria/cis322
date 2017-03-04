@@ -249,7 +249,7 @@ def dispose_asset():
         session['error']='Logistic Officers are the only ones that can dispose assets'
         return redirect('error')
     if request.method=='GET':
-        return render_templat('dispose_asset.html')
+        return render_template('dispose_asset.html')
     if request.method=='POST':
         tag = request.form['tag']
         date = request.form['date']
