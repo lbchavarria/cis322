@@ -68,7 +68,7 @@ def dashboard():
     with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT COUNT(*) FROM users WHERE username=%s AND role_fk=1"
-        cur.execute(sql,(usern))
+        cur.execute(sql,(usern,))
         res = cur.fetchone()[0]
         if res != 0:
             is_log_off = True
@@ -96,7 +96,7 @@ def into_facility(code,name,username):
     with psycopg2.connect(dbname=dbname,host=dbhost,post=dbpost) as connect:
         cur = connect.cursor()
         sql = "SELECT COUNT(*) FROM users WHERE username=%s"
-        cur.execute(sql,(username))
+        cur.execute(sql,(username,))
         res = cur.fetchone()[0]
         if res != 1:
             return "User can't add facility"
@@ -146,7 +146,7 @@ def into_asset(tag,desc,code,username):
     with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT COUNT(*) FROM users WHERE username=%s"
-        cur.execute(sql,(username))
+        cur.execute(sql,(username,))
         res = cur.fetchone()[0]
         if res != 1:
             return "User can't add asset"
@@ -219,7 +219,7 @@ def is_user(role):
     with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur = connect.cursor()
         sql = "SELECT role_fk FROM users WHERE username=%s"
-        cur.execute(sql,(session['username']))
+        cur.execute(sql,(session['username'],))
         connect.commit()
         if role == cur.fetchone()[0]:
             return True
