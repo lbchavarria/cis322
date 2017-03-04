@@ -44,3 +44,22 @@ CREATE TABLE asset_at (
 	arrive timestamp DEFAULT NULL,
 	depart timestamp DEFAULT NULL
 );
+
+DROP TABLE IF EXISTS request CASCADE;
+CREATE TABLE request (
+	requester_id integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
+	request_time timestamp DEFAULT NULL,
+	source integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
+	approver_id integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
+	approval_time timestamp DEFAULT NULL
+);
+
+DROP TABLE IF EXISTS transit CASCADE;
+CREATE TABLE transit (
+	source integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	load timestamp DEFAULT NULL,
+	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	unload timestamp DEFAULT NULL
+);
