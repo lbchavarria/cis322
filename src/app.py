@@ -345,12 +345,72 @@ def transfer_req():
             if res != 1:
                 session['error'] = "The destination facility does not exist"
                 return redirect('error')
-            sql = "INSERT INTO request (requester_id,request_time,source,destination,asset_fk) SELECT user_id,now(),f1.facility_id,f2.facility_id,asset_id FROM users, facilities AS f1, facilities AS f2, assets WHERE username=%s AND f1.name=%s AND f2.name=%s AND asset_tag=%s"
+            sql = "INSERT INTO trans_request (requester_id,request_time,source,destination,asset_fk) SELECT user_id,now(),f1.facility_id,f2.facility_id,asset_id FROM users, facilities AS f1, facilities AS f2, assets WHERE username=%s AND f1.name=%s AND f2.name=%s AND asset_tag=%s"
             username=session['username']
             cur.execute(sql,(username,source,dest,asset_tag))
             connect.commit()
             session['success'] = "Request has been successully added"
             return redirect('success')
+
+@app.route('/approve_req', methods=('GET','POST'))
+def approve_req():
+    if not is_user(2):
+        session['error']='Facility Officers are the only ones to approve or reject transfer requests'
+        return redirect('error')
+    if request.method=='GET':
+       print(request.args)
+       if not 'id' in request.args:
+           print("no id")
+           session['error']='Invalid Request'
+           return redirect('error')
+       else:
+           transit_id=int(request.args['id'])
+           try:
+               with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+                   cur = connect.cursor()
+                   sql = "trans_request transit_id,asset_tag,f1.name,f2.name,load,load_by,unlaod,unload_by,is_approved FROM trans_request JOIN assets ON assets_asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE transit_id"
+                   cur.execute(sql,(transit_id,))
+                   connect.commit()
+                   res=cur.fetchone()
+                   d=dict()
+                   d['id']=res[0]
+                   d['asset_tag']=res[1]
+                   d['source']=res[2]
+                   d['dest']=res[3]
+                   d['load']=res[4]
+                   d['load_by']=res[5]
+                   d['unload']=res[6]
+                   d['unlaod_by']=res[7]
+                   d['is_approved']=res[8]
+               data=d
+           except:
+               print("database error")
+               session['error']="Invalid Request"
+               return redirect ('error')
+           if not data['is_approved']==None:
+               session['error']='Approval has already been completed'
+               return redirect('error')
+           return render_template('approve_req.html',data=data)
+       if request.method='POST':
+           if not 'id' in request.form or not 'submit' in request.form:
+               session['error']='Invalid Request'
+               return redirect('error')
+           if request.form['submit']=='cancel':
+               pass
+           if request.form['submit']=='approve':
+               with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
+                   cur = connect.cursor()
+                   sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),True) FROM users WHERE username=%s AND transit_id=%s"
+                   cur.execute(sql,(session['username'],tansit_id))
+                   connect.commit()
+            if request.form['submit']=='reject':
+                with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
+                   cur = connect.cursor()
+                   sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),False) FROM users WHERE username=%s AND transit_id=%s"
+                   cur.execute(sql,(session['username'],tansit_id))
+                   connect.commit()
+            return redirect('dashboard')
+
 
 if __name__ == '__main__':
     app.debug = True

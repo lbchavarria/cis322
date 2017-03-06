@@ -47,20 +47,20 @@ CREATE TABLE asset_at (
 );
 
 DROP TABLE IF EXISTS request CASCADE;
-CREATE TABLE request (
+CREATE TABLE trans_request (
+	transit_id serial,
 	requester_id integer NOT NULL DEFAULT '0' REFERENCES users (user_id),
 	request_time timestamp DEFAULT NULL,
 	source integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
 	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
 	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
+	is_approved boolean,
 	approver_id integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
-	approval_time timestamp DEFAULT NULL
+	approval_time timestamp DEFAULT NULL,
+	load timestamp DEFAULT NULL,
+	load_by integer REFERENCES users (user_id),
+	unload timestamp DEFAULT NULL,
+	unload_by integer REFERENCES users (user_id),
+	PRIMARY KEY (transit_id)
 );
 
-DROP TABLE IF EXISTS transit CASCADE;
-CREATE TABLE transit (
-	source integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
-	load timestamp DEFAULT NULL,
-	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
-	unload timestamp DEFAULT NULL
-);
