@@ -75,7 +75,28 @@ def dashboard():
         else:
             is_log_off = False
         connect.commit()
-    return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off)
+    to_approve = None
+    to_load = None
+    if not is_log_off:
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = "SELECT transit_id,request_time,asset_tag,f1.name,f2.name FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE is_approved IS NULL ORDER BY trans_request.request_time ASC"
+            cur.execute(sql)
+            connect.commit()
+            res = cur.fetchall()
+            l = list()
+            for i in res:
+                d = dict()
+                d['id'] = i[0]
+                d['date'] = i[1]
+                d['asset_tag'] = i[2]
+                d['source'] = i[3]
+                d['dest'] = i[4]
+                l.append(d)
+        to_approve = l
+    if is_log_off:
+        to_load = None
+    return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off, to_approve=to_approve)
 
 @app.route('/error',methods=('GET','POST'))
 def error():
@@ -368,7 +389,7 @@ def approve_req():
             try:
                 with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                     cur = connect.cursor()
-                    sql = "trans_request transit_id,asset_tag,f1.name,f2.name,load,load_by,unlaod,unload_by,is_approved FROM trans_request JOIN assets ON assets_asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE transit_id"
+                    sql = "SELECT transit_id,asset_tag,f1.name,f2.name,load,load_by,unload,unload_by,is_approved FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE transit_id=%s"
                     cur.execute(sql,(transit_id,))
                     connect.commit()
                     res=cur.fetchone()
@@ -380,7 +401,7 @@ def approve_req():
                     d['load']=res[4]
                     d['load_by']=res[5]
                     d['unload']=res[6]
-                    d['unlaod_by']=res[7]
+                    d['unload_by']=res[7]
                     d['is_approved']=res[8]
                 data=d
             except:
@@ -401,13 +422,13 @@ def approve_req():
                 with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
                     cur = connect.cursor()
                     sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),True) FROM users WHERE username=%s AND transit_id=%s"
-                    cur.execute(sql,(session['username'],tansit_id))
+                    cur.execute(sql,(session['username'],transit_id))
                     connect.commit()
             if request.form['submit']=='reject':
                 with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
                    cur = connect.cursor()
                    sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),False) FROM users WHERE username=%s AND transit_id=%s"
-                   cur.execute(sql,(session['username'],tansit_id))
+                   cur.execute(sql,(session['username'],transit_id))
                    connect.commit()
             return redirect('dashboard')
 
