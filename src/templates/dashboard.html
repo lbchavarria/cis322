@@ -11,6 +11,20 @@
 		<a href="dispose_asset">Dispose Asset</a><br>
 		{% if is_log_off %}
 		<a href='/transfer_req'>Transfer Request</a><br>
+		<br>
+		<h3>Asset Transits in Need of Processing</h3>
+		<table>
+			<tr><th>Date</th><th>Request Number</th><th>Asset Tag</th><th>From</th><th>To</th></tr>
+			
+		{% endif %}
+		{% if not is_log_off %}
+		<h3>Asset Transits in Need of Approval</h3>
+		<table>
+			<tr><th>Date</th><th>Request Number</th><th>Asset Tag</th><th>From</th><th>To</th></tr>
+			{% for i in to_approve: %}
+			<tr><td>{{i['date']}}</td><td><a href="{{url_for('approve_req')}}?id={{i['id']}}">{{i['id']}}</a></td><td>{{i['asset_tag']}}</td><td>{{i['source']}}</td><td>{{i['dest']}}</td></tr>
+			{% endfor %}
+		</table>
 		{% endif %}
 		</p>
 	</body>
