@@ -412,25 +412,25 @@ def approve_req():
                 session['error']='Approval has already been completed'
                 return redirect('error')
             return render_template('approve_req.html',data=data)
-        if request.method=='POST':
-            if not 'id' in request.form or not 'submit' in request.form:
-                session['error']='Invalid Request'
-                return redirect('error')
-            if request.form['submit']=='cancel':
-                pass
-            if request.form['submit']=='approve':
-                with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
-                    cur = connect.cursor()
-                    sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),True) FROM users WHERE username=%s AND transit_id=%s"
-                    cur.execute(sql,(session['username'],transit_id))
-                    connect.commit()
-            if request.form['submit']=='reject':
-                with psycopg2.connect(dbname=dbaname,host=dbhost,port=dbport) as connect:
-                   cur = connect.cursor()
-                   sql = "UPDATE trans_request SET (approved_by,approve,is_approved)=(user_id,now(),False) FROM users WHERE username=%s AND transit_id=%s"
-                   cur.execute(sql,(session['username'],transit_id))
-                   connect.commit()
-            return redirect('dashboard')
+    if request.method=='POST':
+        if not 'id' in request.form or not 'submit' in request.form:
+            session['error']='Invalid Request'
+            return redirect('error')
+        if request.form['submit']=='cancel':
+            pass
+        if request.form['submit']=='approve':
+            with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+                cur = connect.cursor()
+                sql = "UPDATE trans_request SET (approver_id,approval_time,is_approved)=(user_id,now(),True) FROM users WHERE username=%s AND transit_id=%s"
+                cur.execute(sql,(session['username'],int(request.form['id'])))
+                connect.commit()
+        if request.form['submit']=='reject':
+            with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+                cur = connect.cursor()
+                sql = "UPDATE trans_request SET (approver_id,approval_time,is_approved)=(user_id,now(),False) FROM users WHERE username=%s AND transit_id=%s"
+                cur.execute(sql,(session['username'],int(request.form['id'])))
+                connect.commit()
+        return redirect('dashboard')
 
 
 if __name__ == '__main__':
