@@ -1,0 +1,15 @@
+<html>
+	<head><title>Transit Tracking</title></head>
+	<body>
+		<h2>Transit Tracking</h2>
+		<form action="{{url_for('update_transit')}}" method="POST">
+			<table>
+				<tr><th>Transfer ID</th><th>Asset Tag</th><th>Source</th><th>Destination</th><th>Load Time</th><th>Unload Time</th></tr>
+				<tr><td>{{data['id']}}</td><td>{{data['asset_tag']}}</td><td>{{data['source']}}</td><td>{{data['dest']}}</td><td><input type="text" name="load" value="{{data['load']}}"></td><td><input type="text" name="unload" value="{{data['unload']}}"></td></tr>
+			</table>
+			<input type="hidden" name="id" value="{{data['id']}}"><br>
+			<input type="submit" name="submit" value="save">
+			<input type="submit" name="submit" value="cancel">
+		</form>
+	</body>
+</html>

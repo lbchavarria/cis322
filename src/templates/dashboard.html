@@ -15,7 +15,10 @@
 		<h3>Asset Transits in Need of Processing</h3>
 		<table>
 			<tr><th>Date</th><th>Request Number</th><th>Asset Tag</th><th>From</th><th>To</th></tr>
-			
+			{% for i in to_load %}
+			<tr><td>{{i['date']}}</td><td><a href="{{url_for('update_request')}}?id={{i['id']}}">{{i['id']}}</a></td><td>{{i['asset_tag']}}</td><td>{{i['source']}}</td><td>{{i['dest']}}</td></tr>
+			{% endfor %}
+		</table>
 		{% endif %}
 		{% if not is_log_off %}
 		<h3>Asset Transits in Need of Approval</h3>

@@ -95,7 +95,22 @@ def dashboard():
                 l.append(d)
         to_approve = l
     if is_log_off:
-        to_load = None
+        with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+            cur = connect.cursor()
+            sql = "SELECT transit_id,request_time,asset_tag,f1.name,f2.name FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE is_approved IS True AND unload IS NULL ORDER BY trans_request.request_time ASC"
+            cur.execute(sql)
+            connect.commit()
+            res = cur.fetchall()
+            l = list()
+            for i in res:
+                d = dict()
+                d['id'] = i[0]
+                d['date'] = i[1]
+                d['asset_tag'] = i[2]
+                d['source'] = i[3]
+                d['dest'] = i[4]
+                l.append(d)
+        to_load = l
     return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off, to_approve=to_approve)
 
 @app.route('/error',methods=('GET','POST'))
@@ -429,6 +444,55 @@ def approve_req():
                 cur = connect.cursor()
                 sql = "UPDATE trans_request SET (approver_id,approval_time,is_approved)=(user_id,now(),False) FROM users WHERE username=%s AND transit_id=%s"
                 cur.execute(sql,(session['username'],int(request.form['id'])))
+                connect.commit()
+        return redirect('dashboard')
+
+@app.route('/update_transit', methods=('GET','POST'))
+def update_transit():
+    if is_user(1):
+        session['error']='Logistics Officers are the only ones update the transit'
+        return redirect('error')
+    if request.method=='GET':
+        print(request.args)
+        if not 'id' in request.args:
+            print("no id")
+            session['error']='Invalid Request'
+            return redirect('error')
+        else:
+            transit_id=int(request.args['id'])
+            try:
+                with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+                    cur = connect.cursor()
+                    sql = "SELECT transit_id,asset_tag,f1.name,f2.name,load,unload FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 On f2.facility_id=trans_request.destination WHERE transit_id=%s"
+                    cur.execute(sql(transit_is,))
+                    connect.commit()
+                    res=cur.fetchone()
+                    d=dict()
+                    d['id']=res[0]
+                    d['asset_tag']=res[1]
+                    d['source']=res[2]
+                    d['dest']=res[3]
+                    d['load']=res[4]
+                    d['unload']=res[5]
+                data=d
+            except:
+                print("database error")
+                session['error']="Invalid Error"
+                return redirect('error')
+            if not data['unloaded']==None:
+                session['error']='Asset has already been unloaded'
+                return redirect('error')
+        return render_template("update_transit.html",data=data)
+    if request.method=='POST':
+        load = request.form['load']
+        unload = request.form['unload']
+        if request.form['submit']=='cancel':
+            pass
+        if request.form['submit']=='save':
+            with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+                cur = connect.cursor()
+                sql = "UPDATE trans_request SET load=%s,unload=%s,load_by=user_id,unload_by=user_id FROM users WHERE username=%s"
+                cur.execute(sql,(load,unload,session['username']))
                 connect.commit()
         return redirect('dashboard')
 
