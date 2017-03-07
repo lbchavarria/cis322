@@ -111,7 +111,7 @@ def dashboard():
                 d['dest'] = i[4]
                 l.append(d)
         to_load = l
-    return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off, to_approve=to_approve)
+    return render_template('dashboard.html',username=session['username'],is_log_off=is_log_off, to_approve=to_approve, to_load=to_load)
 
 @app.route('/error',methods=('GET','POST'))
 def error():
@@ -449,7 +449,7 @@ def approve_req():
 
 @app.route('/update_transit', methods=('GET','POST'))
 def update_transit():
-    if is_user(1):
+    if not is_user(1):
         session['error']='Logistics Officers are the only ones update the transit'
         return redirect('error')
     if request.method=='GET':
@@ -463,8 +463,8 @@ def update_transit():
             try:
                 with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                     cur = connect.cursor()
-                    sql = "SELECT transit_id,asset_tag,f1.name,f2.name,load,unload FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 On f2.facility_id=trans_request.destination WHERE transit_id=%s"
-                    cur.execute(sql(transit_is,))
+                    sql = "SELECT transit_id,asset_tag,f1.name,f2.name,load,unload FROM trans_request JOIN assets ON assets.asset_id=trans_request.asset_fk JOIN facilities f1 ON f1.facility_id=trans_request.source JOIN facilities f2 ON f2.facility_id=trans_request.destination WHERE transit_id=%s"
+                    cur.execute(sql,(transit_id,))
                     connect.commit()
                     res=cur.fetchone()
                     d=dict()
@@ -479,7 +479,7 @@ def update_transit():
                 print("database error")
                 session['error']="Invalid Error"
                 return redirect('error')
-            if not data['unloaded']==None:
+            if not data['unload']==None:
                 session['error']='Asset has already been unloaded'
                 return redirect('error')
         return render_template("update_transit.html",data=data)
