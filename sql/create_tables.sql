@@ -11,6 +11,7 @@ CREATE TABLE users (
 	username varchar(16) DEFAULT NULL, --directions ask for a username of no more than 16 characters
 	password varchar(16) DEFAULT NULL, --directrions ask for a password of no more than 16 characters
 	role_fk integer NOT NULL DEFAULT '0' REFERENCES roles (role_id),
+	active boolean DEFAULT NULL,
 	PRIMARY KEY (user_id)
 );
 
@@ -41,6 +42,7 @@ DROP TABLE IF EXISTS asset_at CASCADE;
 CREATE TABLE asset_at (
 	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
 	facility_fk integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
+	acquired timestamp DEFAULT NULL,
 	disposed timestamp DEFAULT NULL,
 	arrive timestamp DEFAULT NULL,
 	depart timestamp DEFAULT NULL
