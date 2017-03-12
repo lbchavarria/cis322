@@ -496,6 +496,45 @@ def update_transit():
                 connect.commit()
         return redirect('dashboard')
 
+@app.route('/activate_user', methods=('POST',))
+def activate_user():
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
+        cur=connect.cursor()
+        username = request.form['username']
+        password = request.form['password']
+        print("1")
+        if request.form['role'] == 'facofc':
+            role_id = 2
+        elif request.form['role'] == 'logofc':
+            role_id = 1
+        print("2")
+        sql = "SELECT COUNT(*) FROM users WHERE username=%s"
+        cur.execute(sql,(username,))
+        connect.commit()
+        res = cur.fetchone()[0]
+        print("3")
+        if res != 0:
+            sql = "UPDATE users SET password=%s, active=TRUE WHERE username=%s"
+            cur.execute(sql,(password,username))
+            connect.commit()
+            print("4")
+            return "The user has been activated"
+        elif res == 0:
+            sql = "INSERT INTO users (username, password, role_fk, active) VALUES (%s,%s,%s,TRUE)"
+            cur.execute(sql,(username,password,role_id))
+            connect.commit()
+            print("4")
+            return "The user has been added"
+
+@app.route('/revoke_user', methods=('POST',))
+def revoke_user():
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as conect:
+        cur=connect.cursor()
+        username=request.form['username']
+        sql = "UPDATE users SET active=FALSE WHERE username=%s"
+        cur.execute(sql,(username,))
+        connect.commit()
+        return "The user {} has been revoked".format(username)
 
 if __name__ == '__main__':
     app.debug = True
