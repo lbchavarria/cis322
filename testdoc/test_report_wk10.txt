@@ -1,0 +1,29 @@
+Install:
+
+Preflight starts the DB which us really nice
+
+1. (Pass) Create two users:
+    No issues database has the records in place
+2. (Pass) Login as Logistics Officer
+    Dashboard is returned
+3. (Pass) Add Faciliries are made without issue
+    Facilities are made without issue
+4. (Pass) Add assets to created facilities
+    Both Facilities are able to take a working asset
+5. (Fail) Set up a transfer request
+    Clicking the Transfer request link redirected to an Internal Server Error:
+        object' has no attribute 'num_assets', referer: http://localhost:8080/dashboard
+
+6. (Pass) Switch to Facilities Officer user
+    New user login is works and session variables have switched
+7. (Unable) Approve of transfer request
+    From error is #5 there are no request to approve
+8. (Unable) Update the load and unload times
+    From error is #5 and #7 there are no request to give times to
+9. (Pass) Dispose and asset:
+    Assets are marked as disposed in the database, and the database returns an error if the same asset is attempted to be removedagain
+
+Note:
+-Database reflects all the proper inserts and updates.
+-Transfer report is also not working
+-Asset Report is fully functional
