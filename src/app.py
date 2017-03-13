@@ -48,7 +48,7 @@ def login():
             password = request.form['password']
             with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
                 cur = connect.cursor()
-                sql = "SELECT COUNT(*) FROM users WHERE username=%s AND password=%s"
+                sql = "SELECT COUNT(*) FROM users WHERE username=%s AND password=%s AND active=TRUE"
                 cur.execute(sql,(username,password))
                 connect.commit()
                 res = cur.fetchone()[0]
@@ -528,13 +528,13 @@ def activate_user():
 
 @app.route('/revoke_user', methods=('POST',))
 def revoke_user():
-    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as conect:
+    with psycopg2.connect(dbname=dbname,host=dbhost,port=dbport) as connect:
         cur=connect.cursor()
         username=request.form['username']
         sql = "UPDATE users SET active=FALSE WHERE username=%s"
         cur.execute(sql,(username,))
         connect.commit()
-        return "The user {} has been revoked".format(username)
+        return "The user has been revoked"
 
 if __name__ == '__main__':
     app.debug = True
