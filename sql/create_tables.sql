@@ -57,7 +57,7 @@ CREATE TABLE trans_request (
 	destination integer NOT NULL DEFAULT '0' REFERENCES facilities (facility_id),
 	asset_fk integer NOT NULL DEFAULT '0' REFERENCES assets (asset_id),
 	is_approved boolean,
-	approver_id integer NOT NULL DEFAULT '0' REFERENCES users (user_id),
+	approver_id integer REFERENCES users (user_id),
 	approval_time timestamp NULL DEFAULT NULL,
 	load timestamp NULL DEFAULT NULL,
 	load_by integer REFERENCES users (user_id),
