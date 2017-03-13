@@ -10,7 +10,7 @@ app.secret_key = 'SECRETKEY'
 
 
 
-@app.route('/create_user',methods=('GET','POST'))
+#@app.route('/create_user',methods=('GET','POST'))
 def create_user():
     if request.method=='GET':
         return render_template('create_user.html')
